@@ -9,13 +9,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
 <link rel="import" href="../bower_components/iron-input/iron-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-
+<link rel="import" href="../bower_components/brum-global-variable/brum-global-variable.html">
+<link rel="import" href="shared-styles.html">
 
 <dom-module id="register-login">
   <template>
@@ -33,6 +34,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	{
 	  color: #757575;
 	}
+	.alert-error
+	{
+	  background: #ffcdd2;
+	  border: 1px solid #f44336;
+	  border-radius: 3px;
+	  color: #333;
+	  font-size: 14px;
+	  padding: 10px;
+	}
     </style>
 
   <iron-ajax
@@ -44,9 +54,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	on-error="handleUserError">
   </iron-ajax>
 
+  <iron-localstorage name="user-storage" value="{{storedUser}}"></iron-localstorage>
+  <brum-global-variable key="userData" value="{{storedUser}}"></brum-global-variable>
+  <app-location route="{{route}}"></app-location>
+
+
+  <iron-localstorage name="user-storage" value="{{storedUser}}"></iron-localstorage>
 
     <div class="card">
-      <div id="unauthenticated">
+      <div id="unauthenticated" hidden$= [[storedUser.loggedin]]">
       <h1>Log In</h1>
 
       <p><strong>Log in</strong> or <strong> sign up</strong> to access secret quotes!</p>
@@ -74,8 +90,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	  <paper-button raised class="primary" on-tap="postLogin">Log In</paper-button>
 	  <paper-button class="link" on-tap=postRegister">Sign Up</paper-button>
 	</div>
-    
     </div>
+    <div id="authenticated" hidden$="[[!storedUser.loggedin]]">
+	<h2>Hello, [[storedUser.name]]!</h2>
+	<p>You are currently logged in. You can access <a href="[[rootPath]]secret-quotes">Secret Quotes</a>!</p>
+	<log-out stored-user="{{storedUser}}"></log-out>
+    </div>
+
   </template>
 
   <script>
@@ -84,15 +105,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	 {
 	 return 'register-login';
 	 }
-     static get properties()
+	static get properties()
 	{
 	return
 		{
 		formData:
 			{
 			type: Object,
-			value: {}
-				// error comes from value being empty object
+			value: {}			
 			},
 		storedUser: Object,
 		error: String
@@ -128,6 +148,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 			access_token: response.access_token,
 			loggedin: true
 			};
+		//redirect to secret quotes
+		this.set('route.path', '/secret-quotes');
 		}
 	this.formData = {};
 	}
